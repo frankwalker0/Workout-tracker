@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Workout Tracker</title>
+        <link rel="stylesheet" href="style.css">
+
+        <link rel="manifest" href="manifest.json">
+        <meta name="theme-color" content="#1189b5">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=SN+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    </head>
+    
+    <body>
+
+        <div class="navBar inactive">
+            <button id="backButton">
+                <i class="fa-solid fa-circle-arrow-left"></i>
+            </button>
+
+            <button id="homeButton">
+                <i class="fa-solid fa-house"></i>
+            </button>
+        </div>
+
+        <!-- Title Screen -->
+        <section id="titleScreen" class="active screen">
+            <h1>Workout Tracker</h1>
+
+            <!-- Maybe last workout time and best workout time can be shown here -->
+
+            <button id="beginWorkout" class="normalButton">
+                <p>Begin Workout</p>
+            </button>
+
+            <button id="addWorkout" class="normalButton">
+                <p>Add Workout</p>
+            </button>
+
+            <button class="normalButton">
+                <p>View Statistics</p>
+            </button>
+        </section>
+
+        <!-- Select Workout Screen -->
+        <section id="selectWorkoutScreen" class="inactive screen">
+            
+            <h1>Choose Workout</h1>
+
+            <div id="beginWorkoutList">
+                <!-- <section>
+                    <button class="normalButton beginWorkout" onclick="beginWorkout(${workoutIndex})">
+                        <p>Example Workout name</p>
+                    </button>
+                </section> -->
+            </div>
+
+        </section>
+
+        <!-- Workout Screen -->
+        <section id="workoutScreen" class="inactive screen">
+            <h2 id="currExercise"></h2>
+            <h1 id="mainTime">00:00.00</h1>
+            <div id="exerciseTimeContainer">
+                <h3 id="exerciseTime"></h3>
+                <!-- TODO: the time for exercise, best time/time left, restart button -->
+                <section id="untimedExerciseContainer" class="inactive">
+                    <h4>Best Time:</h4>
+                    <h3 id="bestTime"></h3>
+                </section>
+                <section id="timedExerciseContainer" class="inactive">
+                    <div id="progressBarContainer">
+                        <div id="progressBarFill"></div>
+                    </div>
+                    <h3 id="currExerciseTime"></h3>
+                </section>
+                <button id="restartButton" class="inactive">Restart</button>
+            </div>
+            <button id="nextExerciseButton" class="normalButton">Start</button>
+            <div id="splitContainer">
+                <!-- For the split -->
+            </div>
+            <div id="prevNextExercise">
+                <div>
+                    <h3>Prev:</h3>
+                    <h4 id="prevExerciseText"></h4>
+                </div>
+                <button id="workoutHomeButton" onclick="handleHomeButton()">
+                    <i class="fa-solid fa-house"></i>
+                </button>
+                <div>
+                    <h3>Next:</h3>
+                    <h4 id="nextExerciseText"></h4>
+                </div>
+            </div>
+        </section>
+
+        <!-- Create Workout Screen -->
+        <section id="createWorkoutScreen" class="inactive screen">
+            <h1>Create Workout</h1>
+
+            <button id="fromScratch" class="normalButton">
+                <p>Start from Scratch</p>
+            </button>
+
+            <button id="editExisting" class="normalButton">
+                <p>Edit Existing Workout</p>
+            </button>
+
+        </section>
+
+        <!-- Edit Existing Workout Screen -->
+        <section id="editExistingWorkoutScreen" class="inactive screen">
+            
+            <h1>Choose Workout</h1>
+
+            <div id="editWorkoutList">
+                <!-- <section>
+                    <button class="normalButton editWorkout" onclick="editExistingWorkout(${workoutIndex})">
+                        <p>Example Workout name</p>
+                    </button>
+                </section> -->
+            </div>
+
+        </section>
+
+        <!-- Edit Workout Screen -->
+        <section id="editWorkoutScreen" class="inactive screen">
+            <button id="createExercise">
+                <p>+</p>
+            </button>
+
+            <div id="exercisesEditor">
+                <!-- <section>
+                    <button class="exerciseButton">
+                        <p>Example Exercise - try making long</p>
+                    </button>
+
+                    <button class="moveDown">
+                        <i class="fa-solid fa-arrow-down"></i>
+                    </button>
+
+                    <button class="delete">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </section> -->
+            </div>
+
+            <button class="grey" id="saveButton">
+                <p>Save</p>
+            </button>
+        </section>
+
+        <!-- Add Exercise Screen -->
+        <section id="addExerciseScreen" class="inactive screen">
+            <h1>Add Exercise</h1>
+
+            <form onsubmit="return false">
+                <label for="exerciseNameInput">Name:</label>
+                <textarea name="exerciseNameInput" placeholder="Enter exercise name" id="exerciseNameInput"></textarea>
+
+                <label for="exerciseTimeInput">Time?</label>
+                <textarea name="exerciseTimeInput" placeholder="Enter time in seconds (leave blank or 0 for no time)" id="exerciseTimeInput"></textarea>
+
+                <button id="addExercise">
+                    <p>+</p>
+                </button>
+            </form>
+        </section>
+
+        <!-- Add Workout Screen -->
+        <section id="addWorkoutScreen" class="inactive screen">
+            <h1>Add Workout</h1>
+
+            <form onsubmit="return false">
+                <label for="workoutName">Workout Name:</label>
+                <textarea name="workoutName" placeholder="Enter workout name" id="workoutName"></textarea>
+
+                <button id="submitWorkout">
+                    <p>Submit</p>
+                </button>
+            </form>
+        </section>
+
+        <!-- View Statistics Screen -->
+        <section id="viewStatsScreen" class="inactive screen">
+
+        </section>
+    </body>
+
+    <script src="app.js"></script>
+</html> 
