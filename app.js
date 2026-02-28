@@ -108,25 +108,32 @@ function initialise()
 
     for (let i = 0; i < workoutList.length; i++)
     {
-        for (let j = 0; j < workoutList[i].stats.length; j++)
+        let workout = JSON.parse(JSON.stringify(workoutList[i]));
+        workout.exercises.push({name: "Stretches", time: 0, reps: 0});
+        for (let i = 0; i < workout.exercises.length - 1; i += 2)
+        {
+            workout.exercises.splice(i + 1, 0, {name: "Break", time: 0, reps: 0});
+        }
+
+        for (let j = 0; j < workout.stats.length; j++)
         {
             workoutsCompleted++;
 
-            for (let k = 0; k < workoutList[i].stats[j].length; k++)
+            for (let k = 0; k < workout.stats[j].length; k++)
             {
-                totalTime += workoutList[i].stats[j][k];
+                totalTime += workout.stats[j][k];
 
-                if (workoutList[i].exercises[k].name === "Break")
+                if (workout.exercises[k].name === "Break")
                 {
-                    breakTotalTime += workoutList[i].stats[j][k];
+                    breakTotalTime += workout.stats[j][k];
                 }
-                else if (workoutList[i].exercises[k].name === "Stretches")
+                else if (workout.exercises[k].name === "Stretches")
                 {
-                    stretchTotalTime += workoutList[i].stats[j][k];
+                    stretchTotalTime += workout.stats[j][k];
                 }
                 else
                 {
-                    exerciseTotalTime += workoutList[i].stats[j][k];
+                    exerciseTotalTime += workout.stats[j][k];
                 }
             }
         }
