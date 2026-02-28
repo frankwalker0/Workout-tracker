@@ -339,7 +339,6 @@ function goToExercise(index)
 
     if (currWorkout.exercises[index].time > 0)
     {
-        console.log("yep");
         nextExerciseButton.classList.add("grey");
         nextExerciseButton.removeEventListener('click', handleNextExerciseButton);
     }
@@ -921,7 +920,8 @@ nextExerciseButton.addEventListener('click', handleNextExerciseButton);
 function handleRestartButton()
 {
     currWorkout.times[currWorkout.index - 1] += Number(Date.now() - exerciseStartTime) / 1000; 
-    exerciseStartTime = Date.now();
+    // exerciseStartTime = Date.now();
+    goToExercise(currWorkout.index);
 }
 restartButton.addEventListener('click', handleRestartButton);
 
