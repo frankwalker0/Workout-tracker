@@ -108,25 +108,25 @@ function initialise()
 
     for (let i = 0; i < workoutList.length; i++)
     {
-        for (let j = 0; j < workoutList[i].times.length; j++)
+        for (let j = 0; j < workoutList[i].stats.length; j++)
         {
             workoutsCompleted++;
 
-            for (let k = 0; k < workoutList[i].times[j].length; k++)
+            for (let k = 0; k < workoutList[i].stats[j].length; k++)
             {
-                totalTime += workoutList[i].times[j][k];
+                totalTime += workoutList[i].stats[j][k];
 
                 if (workoutList[i].exercises[k].name === "Break")
                 {
-                    breakTotalTime += workoutList[i].times[j][k];
+                    breakTotalTime += workoutList[i].stats[j][k];
                 }
                 else if (workoutList[i].exercises[k].name === "Stretches")
                 {
-                    stretchTotalTime += workoutList[i].times[j][k];
+                    stretchTotalTime += workoutList[i].stats[j][k];
                 }
                 else
                 {
-                    exerciseTotalTime += workoutList[i].times[j][k];
+                    exerciseTotalTime += workoutList[i].stats[j][k];
                 }
             }
         }
