@@ -1,6 +1,4 @@
-// TODO: Remove the 'next exercise' button for the timed exercises
-// TODO: Add a confirm screen for the home button during workouts
-// TODO: When restart is pressed should that time be added to the previous break or the exercise?
+// TODO: Add splits to the workout screen
 
 // ----- Buttons -----
 const beginWorkoutButton = document.getElementById("beginWorkout");
@@ -16,6 +14,8 @@ const submitWorkoutButton = document.getElementById("submitWorkout");
 const editExistingButton = document.getElementById("editExisting");
 const nextExerciseButton = document.getElementById("nextExerciseButton");
 const restartButton = document.getElementById("restartButton");
+const saveWorkoutTimesButton = document.getElementById("saveWorkoutTimesButton");
+const viewStatsButton = document.getElementById("viewStatsButton");
 
 // ----- Screens -----
 const titleScreen = document.getElementById("titleScreen");
@@ -26,10 +26,14 @@ const addExerciseScreen = document.getElementById("addExerciseScreen");
 const addWorkoutScreen = document.getElementById("addWorkoutScreen");
 const editExistingWorkoutScreen = document.getElementById("editExistingWorkoutScreen");
 const workoutScreen = document.getElementById("workoutScreen");
+const endWorkoutScreen = document.getElementById("endWorkoutScreen");
+const viewStatsScreen = document.getElementById("viewStatsScreen");
+const workoutStatsScreen = document.getElementById("workoutStatsScreen");
 
 // ----- Other HTML elements -----
 const exerciseNameInput = document.getElementById("exerciseNameInput");
 const exerciseTimeInput = document.getElementById("exerciseTimeInput");
+const exerciseRepInput = document.getElementById("exerciseRepInput");
 const workoutName = document.getElementById("workoutName")
 const exercisesEditor = document.getElementById("exercisesEditor");
 const beginWorkoutList = document.getElementById("beginWorkoutList");
@@ -37,22 +41,49 @@ const editWorkoutList = document.getElementById("editWorkoutList");
 const untimedExerciseContainer = document.getElementById("untimedExerciseContainer");
 const timedExerciseContainer = document.getElementById("timedExerciseContainer");
 const progressBarFill = document.getElementById("progressBarFill");
+const finishedWorkoutTimesContainer = document.getElementById("finishedWorkoutTimesContainer");
+const statsWorkoutList = document.getElementById("statsWorkoutList");
+const allWorkoutStats = document.getElementById("allWorkoutStats");
+const wholeWorkoutStats = document.getElementById("wholeWorkoutStats");
+const exerciseTotalStats = document.getElementById("exerciseTotalStats");
+const exerciseAverageStats = document.getElementById("exerciseAverageStats");
+const exerciseBestStats = document.getElementById("exerciseBestStats");
+const exerciseTotalReps = document.getElementById("exerciseTotalReps");
 
 const prevExerciseText = document.getElementById("prevExerciseText");
 const nextExerciseText = document.getElementById("nextExerciseText");
 const currExerciseText = document.getElementById("currExercise");
 const bestTimeText = document.getElementById("bestTime");
 const currExerciseTimeText = document.getElementById("currExerciseTime");
+const finishedWorkoutTime = document.getElementById("finishedWorkoutTime");
+const workoutStatsName = document.getElementById("workoutStatsName");
+
+const exerciseAudio = document.getElementById("exerciseAudio");
 
 // ----- Variables -----
 let newWorkout = 
 {
     name: "",
-    exercises: []
+    exercises: [],
+    stats: [],
+    bestTimes: [],
+    firstWorkoutDate: undefined
 }; // To be filled with the exercises. When saved the first element will be the workout name
 let currWorkout;
-let workoutList = []; // To be filled with the workouts (current is the first in the list, new get added to front)
 let editExerciseIndex = -1; // Index relating to the exercise being editted. -1 if not relating to any exercise
+
+let workoutList = JSON.parse(localStorage.getItem("workoutList")) || [];
+workoutList.forEach(workout => {
+    if (workout.firstWorkoutDate) {
+        workout.firstWorkoutDate = new Date(workout.firstWorkoutDate);
+    }
+});
+
+let totalTime = 0;
+let exerciseTotalTime = 0;
+let breakTotalTime = 0;
+let stretchTotalTime = 0;
+let workoutsCompleted = 0;
 
 // Main timer
 const mainTime = document.getElementById("mainTime");
@@ -69,14 +100,47 @@ let exerciseTimerInterval;
 // ----- Functions -----
 function initialise()
 {
-    // TODO: JSON stuff goes here prob
     if (workoutList.length === 0)
     {
         beginWorkoutButton.classList.add("grey");
         editExistingButton.classList.add("grey");
     }
+
+    for (let i = 0; i < workoutList.length; i++)
+    {
+        for (let j = 0; j < workoutList[i].times.length; j++)
+        {
+            workoutsCompleted++;
+
+            for (let k = 0; k < workoutList[i].times[j].length; k++)
+            {
+                totalTime += workoutList[i].times[j][k];
+
+                if (workoutList[i].exercises[k].name === "Break")
+                {
+                    breakTotalTime += workoutList[i].times[j][k];
+                }
+                else if (workoutList[i].exercises[k].name === "Stretches")
+                {
+                    stretchTotalTime += workoutList[i].times[j][k];
+                }
+                else
+                {
+                    exerciseTotalTime += workoutList[i].times[j][k];
+                }
+            }
+        }
+    }
+    if (workoutsCompleted === 0)
+    {
+        viewStatsButton.classList.add("grey");
+    }
 }
 initialise();
+
+function saveWorkouts() {
+    localStorage.setItem("workoutList", JSON.stringify(workoutList));
+}
 
 function switchPage(newPage)
 {
@@ -97,44 +161,38 @@ function switchPage(newPage)
 function addExercise()
 {
     const exercise = exerciseNameInput.value;
-    const time = exerciseTimeInput.value;
-    if (!exerciseNameInput.value) {return}
+    let time = exerciseTimeInput.value;
+    let reps = exerciseRepInput.value;
 
     if (!exerciseTimeInput.value)
     {
-        if (editExerciseIndex != -1)
-        {
-            newWorkout.exercises[editExerciseIndex] = 
-            {
-                name: exercise,
-                time: 0
-            };
-        }
-        else
-        {
-            newWorkout.exercises.push({
-                name: exercise,
-                time: 0
-            });
-        }
+        time = 0;
     }
-    else if (!isNaN(time) && Number(time) >= 0)
+    if (!exerciseRepInput.value)
     {
-        if (editExerciseIndex != -1)
+        reps = 0;
+    }
+
+    if (!exerciseNameInput.value) {return}
+    if (isNaN(Number(time)) || Number(time) < 0) {return}
+    if (isNaN(Number(reps)) || Number(reps) < 0) {return}
+
+    if (editExerciseIndex != -1)
+    {
+        newWorkout.exercises[editExerciseIndex] =
         {
-            newWorkout.exercises[editExerciseIndex] = 
-            {
-                name: exercise,
-                time: Number(time)
-            }
-        }
-        else
-        {
-            newWorkout.exercises.push({
-                name: exercise,
-                time: Number(time)
-            });
-        }
+            name: exercise,
+            time: Number(time),
+            reps: Number(reps)
+        };
+    }
+    else
+    {
+        newWorkout.exercises.push({
+            name: exercise,
+            time: Number(time),
+            reps: Number(reps)
+        });
     }
 
     if (newWorkout.exercises.length > 0)
@@ -147,6 +205,7 @@ function addExercise()
 
     exerciseNameInput.value = '';
     exerciseTimeInput.value = '';
+    exerciseRepInput.value = '';
 }
 
 function editExercise(index)
@@ -155,6 +214,7 @@ function editExercise(index)
     switchPage(addExerciseScreen);
     exerciseNameInput.value = newWorkout.exercises[index].name;
     exerciseTimeInput.value = newWorkout.exercises[index].time;
+    exerciseRepInput.value = newWorkout.exercises[index].reps;
 }
 
 function moveExerciseDown(index)
@@ -195,7 +255,10 @@ function createEmptyWorkout()
 {
     return {
         name: "",
-        exercises: []
+        exercises: [],
+        stats: [],
+        bestTimes: [],
+        firstWorkoutDate: undefined
     };
 }
 
@@ -203,11 +266,13 @@ function beginWorkout(index)
 {
     currWorkout = JSON.parse(JSON.stringify(workoutList[index]));
     currWorkout.index = -1;
-    currWorkout.exercises.push({name: 'Stretches', time: 0});
+    currWorkout.exercises.push({name: "Stretches", time: 0, reps: 0});
     for (let i = 0; i < currWorkout.exercises.length - 1; i += 2)
     {
-        currWorkout.exercises.splice(i + 1, 0, {name: "Break", time: 0});
+        currWorkout.exercises.splice(i + 1, 0, {name: "Break", time: 0, reps: 0});
     }
+    currWorkout.times = [];
+    currWorkout.workoutListIndex = index;
 
     mainTime.textContent = `00:00.000`;
     prevExerciseText.textContent = `None`;
@@ -239,6 +304,8 @@ function resetWorkout()
     prevExerciseText.textContent = "";
     nextExerciseText.textContent = "";
     nextExerciseButton.textContent = "Start";
+    nextExerciseButton.classList.remove("grey");
+    nextExerciseButton.addEventListener('click', handleNextExerciseButton);
 }
 
 function goToExercise(index)
@@ -252,6 +319,22 @@ function goToExercise(index)
     let nextText;
 
     exerciseStartTime = Date.now();
+
+    // From ChatGPT
+    if (currWorkout.exercises[index].name === "Bring Sally up") {
+        exerciseAudio.currentTime = 0;
+        exerciseAudio.play();
+    } else {
+        exerciseAudio.pause();
+        exerciseAudio.currentTime = 0;
+    }
+
+    if (currWorkout.exercises[index].time > 0)
+    {
+        console.log("yep");
+        nextExerciseButton.classList.add("grey");
+        nextExerciseButton.removeEventListener('click', handleNextExerciseButton);
+    }
 
     if (index === 0)
     {
@@ -272,10 +355,11 @@ function goToExercise(index)
             if (currWorkout.exercises[currWorkout.index].time > 0)
             {
                 const progress = Math.min(exerciseElapsedTime / (currWorkout.exercises[currWorkout.index].time * 1000), 1);
-                console.log(progress);
                 progressBarFill.style.width = `${progress * 100}%`;
                 if (progress >= 1) 
                 {
+                    nextExerciseButton.classList.remove("grey");
+                    nextExerciseButton.addEventListener('click', handleNextExerciseButton);
                     handleNextExerciseButton();
                 }
             }
@@ -300,8 +384,14 @@ function goToExercise(index)
             if (currWorkout.exercises[index].time === 0) 
             {
                 untimedExerciseContainer.classList.remove("inactive");
-                // TODO: bestTime logic here
-                bestTimeText.textContent = `N/A`;
+                if (currWorkout.bestTimes.length > 0)
+                {
+                    bestTimeText.textContent = currWorkout.bestTimes[index];
+                }
+                else
+                {
+                    bestTimeText.textContent = `N/A`;
+                }
             }
             else 
             {
@@ -317,16 +407,215 @@ function goToExercise(index)
         nextText = `Next`;
     }
 
-    currExerciseText.textContent = `${currWorkout.exercises[index].name}`;
+    if (currWorkout.exercises[index].reps > 0)
+    {
+        currExerciseText.textContent = `${currWorkout.exercises[index].reps} ${currWorkout.exercises[index].name}`;
+    }
+    else
+    {
+        currExerciseText.textContent = `${currWorkout.exercises[index].name}`;
+    }
+
     nextExerciseButton.textContent = `${nextText}`;
     prevExerciseText.textContent = `${prev}`;
     nextExerciseText.textContent = `${next}`;
 }
 
 function endWorkout()
+{   
+    let newInnerHTML = ``;
+
+    finishedWorkoutTime.textContent = formatTime(Date.now() - mainStartTime);
+    switchPage(endWorkoutScreen);
+
+    for (let i = 0; i < currWorkout.times.length; i++)
+    {
+        newInnerHTML += `
+        <div>
+            <h3>${currWorkout.exercises[i].name}:</h3>
+            <h4>${currWorkout.times[i]}</h4>
+        </div>
+        `;
+    }
+
+    finishedWorkoutTimesContainer.innerHTML = newInnerHTML;
+}
+
+function showWorkoutStats(index)
 {
-    // Stop timer logic
-    currExerciseText.textContent = `Workout Complete!`;
+    switchPage(workoutStatsScreen);
+
+    let workout = JSON.parse(JSON.stringify(workoutList[index]));
+    workout.exercises.push({name: "Stretches", time: 0, reps: 0});
+    for (let i = 0; i < workout.exercises.length - 1; i += 2)
+    {
+        workout.exercises.splice(i + 1, 0, {name: "Break", time: 0, reps: 0});
+    }
+
+    workoutStatsName.textContent = `${workout.name}`;
+
+    let thisWorkoutTime = 0;
+    let thisExerciseTime = 0;
+    let thisBreakTime = 0;
+    let thisStretchTime = 0;
+
+    let completions = 0;
+    let totalTimeWorkout = 0;
+    let breakTotalTimeWorkout = 0;
+    let stretchTotalTimeWorkout = 0;
+    let exerciseTotalTimeWorkout = 0;
+    let totalTimesList = [];
+    let totalRepsList = [];
+
+    for (let i = 0; i < workout.stats[0].length; i++)
+    {
+        thisWorkoutTime += workout.stats[0][i];
+        totalTimesList.push(0);
+        totalRepsList.push(0);
+        if (workout.exercises[i].name === "Break")
+        {
+            thisBreakTime += workout.stats[0][i];
+        }
+        else if (workout.exercises[i].name === "Stretches")
+        {
+            thisStretchTime += workout.stats[0][i];
+        }
+        else
+        {
+            thisExerciseTime += workout.stats[0][i];
+        }
+    }
+
+    let bestTimeWorkout = thisWorkoutTime;
+    let bestTimeExerciseWorkout = thisExerciseTime;
+    let bestTimeBreakWorkout = thisBreakTime;
+    let bestTimeStretchWorkout = thisStretchTime;
+
+    for (let i = 0; i < workout.stats.length; i++)
+    {
+        completions++;
+        thisWorkoutTime = 0;
+        thisExerciseTime = 0;
+        thisBreakTime = 0;
+        thisStretchTime = 0;
+        for (let j = 0; j < workout.stats[i].length; j++)
+        {
+            totalTimeWorkout += workout.stats[i][j];
+            thisWorkoutTime += workout.stats[i][j];
+            totalTimesList[j] += workout.stats[i][j];
+            totalRepsList[j] += workout.exercises[j].reps;
+
+            if (workout.exercises[j].name === "Break")
+            {
+                breakTotalTimeWorkout += workout.stats[i][j];
+                thisBreakTime += workout.stats[i][j];
+            }
+            else if (workout.exercises[j].name === "Stretches")
+            {
+                stretchTotalTimeWorkout += workout.stats[i][j];
+                thisStretchTime += workout.stats[i][j];
+            }
+            else
+            {
+                exerciseTotalTimeWorkout += workout.stats[i][j];
+                thisExerciseTime += workout.stats[i][j];
+            }
+        }
+        if (thisWorkoutTime < bestTimeWorkout)
+        {
+            bestTimeWorkout = thisWorkoutTime;
+        }
+        if (thisExerciseTime < bestTimeExerciseWorkout)
+        {
+            bestTimeExerciseWorkout = thisExerciseTime;
+        }
+        if (thisBreakTime < bestTimeBreakWorkout)
+        {
+            bestTimeBreakWorkout = thisBreakTime;
+        }
+        if (thisStretchTime < bestTimeStretchWorkout)
+        {
+            bestTimeStretchWorkout = thisStretchTime;
+        }
+    }
+
+    let averageTimesList = [];
+
+    for (let i = 0; i < totalTimesList.length; i++)
+    {
+        averageTimesList.push(totalTimesList[i] / completions);
+    }
+
+    const averageTimeWorkout = totalTime / completions;
+    const averageTimeBreakWorkout = breakTotalTimeWorkout / completions;
+    const averageTimeStretchWorkout = stretchTotalTimeWorkout / completions;
+    const averageTimeExerciseWorkout = exerciseTotalTimeWorkout / completions;
+
+    wholeWorkoutStats.innerHTML = `
+    <div><h3>Total completions:</h3><h4>${completions}</h4></div>
+    <div><h3>Total time:</h3><h4>${secondsToHMS(totalTimeWorkout)}</h4></div>
+    <div><h3>Total time exercising:</h3><h4>${secondsToHMS(exerciseTotalTimeWorkout)}</h4></div>
+    <div><h3>Total time on breaks:</h3><h4>${secondsToHMS(breakTotalTimeWorkout)}</h4></div>
+    <div><h3>Total time stretching:</h3><h4>${secondsToHMS(stretchTotalTimeWorkout)}</h4></div>
+    <div><h3>Average time:</h3><h4>${secondsToHMS(averageTimeWorkout)}</h4></div>
+    <div><h3>Average time exercising per workout:</h3><h4>${secondsToHMS(averageTimeExerciseWorkout)}</h4></div>
+    <div><h3>Average time on breaks per workout:</h3><h4>${secondsToHMS(averageTimeBreakWorkout)}</h4></div>
+    <div><h3>Average time stretching per workout:</h3><h4>${secondsToHMS(averageTimeStretchWorkout)}</h4></div>
+    <div><h3>Best time:</h3><h4>${secondsToHMS(bestTimeWorkout)}</h4></div>
+    <div><h3>Best time for exercises:</h3><h4>${secondsToHMS(bestTimeExerciseWorkout)}</h4></div>
+    <div><h3>Best time for breaks:</h3><h4>${secondsToHMS(bestTimeBreakWorkout)}</h4></div>
+    <div><h3>Best time for stretching:</h3><h4>${secondsToHMS(bestTimeStretchWorkout)}</h4></div>
+    `;
+
+    newInnerHTML = ``;
+
+    for (let i = 0; i < totalTimesList.length; i++)
+    {
+        newInnerHTML += `
+        <div><h3>${workout.exercises[i].name}:</h3><h4>${secondsToHMS(totalTimesList[i])}</h4></div>
+        `;
+    }
+
+    exerciseTotalStats.innerHTML = newInnerHTML;
+
+    newInnerHTML = ``;
+
+    
+    for (let i = 0; i < averageTimesList.length; i++)
+    {
+        newInnerHTML += `
+        <div><h3>${workout.exercises[i].name}:</h3><h4>${secondsToHMS(averageTimesList[i])}</h4></div>
+        `;
+    }
+
+    exerciseAverageStats.innerHTML = newInnerHTML;
+
+    newInnerHTML = ``;
+
+    console.log(workout.bestTimes.length);
+    for (let i = 0; i < workout.bestTimes.length; i++)
+    {
+        console.log(workout.bestTimes[i]);
+        newInnerHTML += `
+        <div><h3>${workout.exercises[i].name}:</h3><h4>${secondsToHMS(workout.bestTimes[i])}</h4></div>
+        `;
+    }
+
+    exerciseBestStats.innerHTML = newInnerHTML;
+
+    newInnerHTML = ``;
+
+    for (let i = 0; i < totalRepsList.length; i++)
+    {
+        if (totalRepsList[i] > 0)
+        {
+            newInnerHTML += `
+            <div><h3>${workout.exercises[i].name}:</h3><h4>${totalRepsList[i]}</h4></div>
+            `;
+        }
+    }
+
+    exerciseTotalReps.innerHTML = newInnerHTML;
 }
 
 function formatTime(milliseconds)
@@ -339,6 +628,37 @@ function formatTime(milliseconds)
     const format = (num) => num.toString().padStart(2, '0');
 
     return `${format(minutes)}:${format(seconds)}.${format(milliseconds.toString().padStart(3, '0'))}`;
+}
+
+// Stolen from google ai overview
+function secondsToHMS(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+
+    // Use padStart() to ensure two-digit formatting (e.g., 05 instead of 5)
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+
+    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+}
+
+// Stolen from google ai overview
+function daysBetween(date1, date2) {
+    // The number of milliseconds in one day
+    const ONE_DAY_MS = 1000 * 60 * 60 * 24;
+
+    // Convert both dates to UTC timestamps to ignore local timezone effects
+    const date1_ms = Date.UTC(date1.getFullYear(), date1.getMonth(), date1.getDate());
+    const date2_ms = Date.UTC(date2.getFullYear(), date2.getMonth(), date2.getDate());
+
+    // Calculate the difference in milliseconds
+    const differenceMs = Math.abs(date1_ms - date2_ms);
+
+    // Convert back to days and return
+    // Math.floor() ensures you get whole days
+    return Math.floor(differenceMs / ONE_DAY_MS); 
 }
 
 function updateUI()
@@ -392,6 +712,69 @@ function updateUI()
     })
 
     editWorkoutList.innerHTML = newInnerHTML;
+
+    newInnerHTML = ``;
+
+    newInnerHTML += `
+    <div>
+        <h3>Total time:</h3>
+        <h4>${secondsToHMS(totalTime)}</h4>
+    </div>
+    `;
+
+    newInnerHTML += `
+    <div>
+        <h3>Total time exercising:</h3>
+        <h4>${secondsToHMS(exerciseTotalTime)}</h4>
+    </div>
+    `;
+
+    newInnerHTML += `
+    <div>
+        <h3>Total time on breaks:</h3>
+        <h4>${secondsToHMS(breakTotalTime)}</h4>
+    </div>
+    `;
+
+    newInnerHTML += `
+    <div>
+        <h3>Total time stretching:</h3>
+        <h4>${secondsToHMS(stretchTotalTime)}</h4>
+    </div>
+    `;
+
+    if (workoutList.length > 0 && workoutList.at(-1).stats.length > 0)
+    {
+        newInnerHTML += `
+        <div>
+            <h3>Days since first workout:</h3>
+            <h4>${daysBetween(new Date(), workoutList.at(-1).firstWorkoutDate)}</h4>
+        </div>
+        `;
+    }
+
+    newInnerHTML += `
+    <div>
+        <h3>Workouts completed:</h3>
+        <h4>${workoutsCompleted}</h4>
+    </div>
+    `;
+
+    allWorkoutStats.innerHTML = newInnerHTML;
+
+    newInnerHTML = ``;
+    
+    workoutList.forEach((element, elementIndex) => {
+        newInnerHTML += `
+        <section>
+            <button class="normalButton statWorkout" onclick="showWorkoutStats(${elementIndex})">
+                <p>${element.name}</p>
+            </button>
+        </section>
+        `
+    })
+
+    statsWorkoutList.innerHTML = newInnerHTML;
 }
 
 // ----- Handle Buttons Presses -----
@@ -399,7 +782,7 @@ function handleBackButton()
 {
     const currPage = document.querySelector(".active");
 
-    if (currPage == selectWorkoutScreen || currPage == createWorkoutScreen)
+    if (currPage == selectWorkoutScreen || currPage == createWorkoutScreen || currPage == viewStatsScreen)
     {
         switchPage(titleScreen);
     }
@@ -412,11 +795,28 @@ function handleBackButton()
         editExerciseIndex = -1;
         switchPage(editWorkoutScreen);
     }
+    else if (currPage == endWorkoutScreen)
+    {
+        const confirmed = confirm("Are you sure? Leaving will lose workout progress!");
+        if (!confirmed) return;
+        resetWorkout();
+        switchPage(titleScreen);
+    }
+    else if (currPage == workoutStatsScreen)
+    {
+        switchPage(viewStatsScreen);
+    }
 }
 backButton.addEventListener('click', handleBackButton);
 
 function handleHomeButton()
 {
+    if (document.querySelector(".active") === workoutScreen && currWorkout)
+    {
+        const confirmed = confirm("Are you sure? Leaving will lose workout progress!");
+        if (!confirmed) return;
+    }
+
     resetWorkout();
     switchPage(titleScreen);
 }
@@ -426,7 +826,7 @@ function handleBeginWorkoutButton()
 {
     if (workoutList.length > 0)
     {
-    switchPage(selectWorkoutScreen);
+        switchPage(selectWorkoutScreen);
     }
 }
 beginWorkoutButton.addEventListener('click', handleBeginWorkoutButton);
@@ -463,14 +863,14 @@ function handleSaveButton()
 {
     if (newWorkout.exercises.length > 0)
     {
-    switchPage(addWorkoutScreen);
+        switchPage(addWorkoutScreen);
     }
 }
 saveButton.addEventListener('click', handleSaveButton);
 
 function handleSubmitWorkoutButton()
 {
-    if (!workoutName.value) {return}
+    if (!workoutName.value || workoutList.some(workoutList => workoutList.name === workoutName.value)) {return}
     newWorkout.name = workoutName.value;
     workoutList.unshift(JSON.parse(JSON.stringify(newWorkout)));
     switchPage(titleScreen);
@@ -478,6 +878,7 @@ function handleSubmitWorkoutButton()
     beginWorkoutButton.classList.remove("grey");
     editExistingButton.classList.remove("grey");
     workoutName.value = '';
+    saveWorkouts();
     updateUI();
 }
 submitWorkoutButton.addEventListener('click', handleSubmitWorkoutButton);
@@ -493,9 +894,14 @@ editExistingButton.addEventListener('click', handleEditExistingButton);
 
 function handleNextExerciseButton()
 {
+    if (currWorkout.index !== -1)
+    {
+        currWorkout.times.push(Number(Date.now() - exerciseStartTime) / 1000);
+    }
+
     if (currWorkout.index === currWorkout.exercises.length - 1)
     {
-        endWorkout(); //TODO: Might be just switching to an endWorkoutScreen?
+        endWorkout();
     }
     else
     {
@@ -506,11 +912,77 @@ nextExerciseButton.addEventListener('click', handleNextExerciseButton);
 
 function handleRestartButton()
 {
+    currWorkout.times[currWorkout.index - 1] += Number(Date.now() - exerciseStartTime) / 1000; 
     exerciseStartTime = Date.now();
 }
 restartButton.addEventListener('click', handleRestartButton);
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("Service Worker Registered"));
+function handleSaveWorkoutTimesButton()
+{
+    if (workoutList[currWorkout.workoutListIndex].stats.length === 0)
+    {
+        workoutList[currWorkout.workoutListIndex].firstWorkoutDate = new Date();
+    }
+
+    workoutList[currWorkout.workoutListIndex].stats.push(currWorkout.times);
+
+    if (workoutList[currWorkout.workoutListIndex].bestTimes.length === 0)
+    {
+        workoutList[currWorkout.workoutListIndex].bestTimes = JSON.parse(JSON.stringify(currWorkout.times));
+    }
+    else
+    {
+        for (let i = 0; i < currWorkout.times.length; i++)
+        {
+            if (currWorkout.times[i] < workoutList[currWorkout.workoutListIndex].bestTimes[i])
+            {
+                workoutList[currWorkout.workoutListIndex].bestTimes[i] = currWorkout.times[i];
+            }
+        }
+    }
+
+    workoutsCompleted++;
+
+    for (let i = 0; i < currWorkout.times.length; i++)
+    {
+        totalTime += currWorkout.times[i];
+
+        if (currWorkout.exercises[i].name === "Break")
+        {
+            breakTotalTime += currWorkout.times[i];
+        }
+        else if (currWorkout.exercises[i].name === "Stretches")
+        {
+            stretchTotalTime += currWorkout.times[i];
+        }
+        else
+        {
+            exerciseTotalTime += currWorkout.times[i];
+        }
+    }
+
+    if (viewStatsButton.classList.contains("grey"))
+    {
+        viewStatsButton.classList.remove("grey");
+    }
+    switchPage(titleScreen);
+    resetWorkout();
+    saveWorkouts();
 }
+saveWorkoutTimesButton.addEventListener('click', handleSaveWorkoutTimesButton);
+
+function handleViewStatsButton()
+{
+    switchPage(viewStatsScreen);
+    updateUI();
+}
+viewStatsButton.addEventListener('click', handleViewStatsButton);
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js")
+        .then(reg => console.log("Service Worker registered"))
+        .catch(err => console.log("Service Worker failed:", err));
+    });
+}
+

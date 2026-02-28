@@ -41,7 +41,7 @@
                 <p>Add Workout</p>
             </button>
 
-            <button class="normalButton">
+            <button id="viewStatsButton" class="normalButton">
                 <p>View Statistics</p>
             </button>
         </section>
@@ -63,9 +63,9 @@
 
         <!-- Workout Screen -->
         <section id="workoutScreen" class="inactive screen">
-            <h2 id="currExercise"></h2>
-            <h1 id="mainTime">00:00.00</h1>
-            <div id="exerciseTimeContainer">
+            <div id="workoutContent">
+                <h2 id="currExercise"></h2>
+                <h1 id="mainTime">00:00.00</h1>
                 <h3 id="exerciseTime"></h3>
                 <!-- TODO: the time for exercise, best time/time left, restart button -->
                 <section id="untimedExerciseContainer" class="inactive">
@@ -78,25 +78,39 @@
                     </div>
                     <h3 id="currExerciseTime"></h3>
                 </section>
+                <h4 id="splitText"></h4>
+            </div>
+            <div id="workoutControls">
                 <button id="restartButton" class="inactive">Restart</button>
-            </div>
-            <button id="nextExerciseButton" class="normalButton">Start</button>
-            <div id="splitContainer">
-                <!-- For the split -->
-            </div>
-            <div id="prevNextExercise">
-                <div>
-                    <h3>Prev:</h3>
-                    <h4 id="prevExerciseText"></h4>
-                </div>
-                <button id="workoutHomeButton" onclick="handleHomeButton()">
-                    <i class="fa-solid fa-house"></i>
-                </button>
-                <div>
-                    <h3>Next:</h3>
-                    <h4 id="nextExerciseText"></h4>
+                <button id="nextExerciseButton" class="normalButton">Start</button>
+                <div id="prevNextExercise">
+                    <div>
+                        <h3>Prev:</h3>
+                        <h4 id="prevExerciseText"></h4>
+                    </div>
+                    <button id="workoutHomeButton" onclick="handleHomeButton()">
+                        <i class="fa-solid fa-house"></i>
+                    </button>
+                    <div>
+                        <h3>Next:</h3>
+                        <h4 id="nextExerciseText"></h4>
+                    </div>
                 </div>
             </div>
+        </section>
+
+        <!-- End Workout Screen -->
+        <section id="endWorkoutScreen" class="inactive screen">
+            <h2>Workout Complete!</h2>
+            <h1 id="finishedWorkoutTime"></h1>
+            <div id="finishedWorkoutTimesContainer" class="statsDetails">
+                <!-- The place for the workouts and their corresponding time taken -->
+                <!-- <section>
+                    <h3>Exercise name</h3>
+                    <h3>Time</h3>
+                </section> -->
+            </div>
+            <button id="saveWorkoutTimesButton" class="normalButton">Save Workout</button>
         </section>
 
         <!-- Create Workout Screen -->
@@ -166,6 +180,9 @@
                 <label for="exerciseTimeInput">Time?</label>
                 <textarea name="exerciseTimeInput" placeholder="Enter time in seconds (leave blank or 0 for no time)" id="exerciseTimeInput"></textarea>
 
+                <label for="exerciseRepInput">Reps?</label>
+                <textarea name="exerciseRepInput" placeholder="Enter reps (leave blank or 0 for no reps)" id="exerciseRepInput"></textarea>
+
                 <button id="addExercise">
                     <p>+</p>
                 </button>
@@ -188,8 +205,84 @@
 
         <!-- View Statistics Screen -->
         <section id="viewStatsScreen" class="inactive screen">
-
+            <h1>Overall Statistics</h1>
+            <div id="allWorkoutStats" class="statsDetails">
+                <div>
+                    <h3>Total time:</h3>
+                    <h4></h4>
+                </div>
+                <h3>Total time exercising:</h3>
+                <h4></h4>
+                <h3>Total time on breaks:</h3>
+                <h4></h4>
+                <h3>Total time stretching:</h3>
+                <h4></h4>
+                <h3>Days since first workout:</h3>
+                <h4></h4>
+                <h3>Workouts completed:</h3>
+                <h4></h4>
+            </div>
+            <h1>Choose Workout</h1>
+            <div id="statsWorkoutList">
+            </div>
         </section>
+
+        <!-- Workout Statistics Screen -->
+        <section id="workoutStatsScreen" class="inactive screen">
+            <h1 id="workoutStatsName"></h1>
+            <div id="wholeWorkoutStats" class="statsDetails">
+                <div>
+                    <h3>Total time:</h3>
+                    <h4></h4>
+                </div>
+                <h3>Total time exercising:</h3>
+                <h4></h4>
+                <h3>Total time on breaks:</h3>
+                <h4></h4>
+                <h3>Total time stretching:</h3>
+                <h4></h4>
+                <h3>Average time:</h3>
+                <h4></h4>
+                <h3>Average time exercising per workout:</h3>
+                <h4></h4>
+                <h3>Average time on breaks per workout:</h3>
+                <h4></h4>
+                <h3>Average time stretching per workout:</h3>
+                <h4></h4>
+                <h3>Best time:</h3>
+                <h4></h4>
+                <h3>Best time for exercises:</h3>
+                <h4></h4>
+                <h3>Best time for breaks:</h3>
+                <h4></h4>
+                <h3>Best time for stretching:</h3>
+                <h4></h4>
+            </div>
+
+            <h2>Total times for each exercise:</h2>
+            <div id="exerciseTotalStats" class="statsDetails">
+                
+            </div>
+
+            <h2>Average times for each exercise:</h2>
+            <div id="exerciseAverageStats" class="statsDetails">
+                
+            </div>
+
+            <h2>Best times for each exercise:</h2>
+            <div id="exerciseBestStats" class="statsDetails">
+                
+            </div>
+
+            <h2>Total reps for each exercise:</h2>
+            <div id="exerciseTotalReps" class="statsDetails">
+                
+            </div>
+        </section>
+
+        <audio id="exerciseAudio" preload="auto">
+            <source src="bringsallyup.mp3" type="audio/mpeg">
+        </audio>
     </body>
 
     <script src="app.js"></script>
