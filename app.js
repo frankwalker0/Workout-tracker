@@ -163,6 +163,7 @@ function switchPage(newPage)
     {
         navButtons.classList.remove("inactive");
     }
+    updateUI();
 }
 
 function addExercise()
