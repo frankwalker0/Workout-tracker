@@ -414,7 +414,7 @@ function goToExercise(index)
         nextText = `Next`;
     }
 
-    if (currWorkout.exercises[index].reps > 0)
+    if (currWorkout.exercises[index].reps > 0 && currWorkout.exercises[index].name !== "Bring Sally up")
     {
         currExerciseText.textContent = `${currWorkout.exercises[index].reps} ${currWorkout.exercises[index].name}`;
     }
