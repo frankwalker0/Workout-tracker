@@ -566,7 +566,7 @@ function showWorkoutStats(index)
     <div><h3>Average time:</h3><h4>${secondsToHMS(averageTimeWorkout)}</h4></div>
     <div><h3>Average time exercising per workout:</h3><h4>${secondsToHMS(averageTimeExerciseWorkout)}</h4></div>
     <div><h3>Average time on breaks per workout:</h3><h4>${secondsToHMS(averageTimeBreakWorkout)}</h4></div>
-    <div><h3>Average time stretching per workout:</h3><h4>${secondsToHMS(averageTimeExerBreakWorkout)}</h4></div>
+    <div><h3>Average time exercising + on breaks per workout:</h3><h4>${secondsToHMS(averageTimeExerBreakWorkout)}</h4></div>
     <div><h3>Best time:</h3><h4>${secondsToHMS(bestTimeWorkout)}</h4></div>
     <div><h3>Best time for exercises:</h3><h4>${secondsToHMS(bestTimeExerciseWorkout)}</h4></div>
     <div><h3>Best time for breaks:</h3><h4>${secondsToHMS(bestTimeBreakWorkout)}</h4></div>
