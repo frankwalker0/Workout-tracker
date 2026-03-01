@@ -464,7 +464,7 @@ function showWorkoutStats(index)
     let thisWorkoutTime = 0;
     let thisExerciseTime = 0;
     let thisBreakTime = 0;
-    let thisStretchTime = 0;
+    let thisExerBreakTime = 0;
 
     let completions = 0;
     let totalTimeWorkout = 0;
@@ -481,14 +481,12 @@ function showWorkoutStats(index)
         totalRepsList.push(0);
         if (workout.exercises[i].name === "Break")
         {
+            thisExerBreakTime += workout.stats[0][i];
             thisBreakTime += workout.stats[0][i];
         }
-        else if (workout.exercises[i].name === "Stretches")
+        else if (workout.exercises[i].name !== "Stretches")
         {
-            thisStretchTime += workout.stats[0][i];
-        }
-        else
-        {
+            thisExerBreakTime += workout.stats[0][i];
             thisExerciseTime += workout.stats[0][i];
         }
     }
@@ -496,7 +494,7 @@ function showWorkoutStats(index)
     let bestTimeWorkout = thisWorkoutTime;
     let bestTimeExerciseWorkout = thisExerciseTime;
     let bestTimeBreakWorkout = thisBreakTime;
-    let bestTimeStretchWorkout = thisStretchTime;
+    let bestTimeExerBreakWorkout = thisExerBreakTime;
 
     for (let i = 0; i < workout.stats.length; i++)
     {
@@ -504,7 +502,7 @@ function showWorkoutStats(index)
         thisWorkoutTime = 0;
         thisExerciseTime = 0;
         thisBreakTime = 0;
-        thisStretchTime = 0;
+        thisExerBreakTime = 0;
         for (let j = 0; j < workout.stats[i].length; j++)
         {
             totalTimeWorkout += workout.stats[i][j];
@@ -516,16 +514,17 @@ function showWorkoutStats(index)
             {
                 breakTotalTimeWorkout += workout.stats[i][j];
                 thisBreakTime += workout.stats[i][j];
+                thisExerBreakTime += workout.stats[i][j];
             }
             else if (workout.exercises[j].name === "Stretches")
             {
                 stretchTotalTimeWorkout += workout.stats[i][j];
-                thisStretchTime += workout.stats[i][j];
             }
             else
             {
                 exerciseTotalTimeWorkout += workout.stats[i][j];
                 thisExerciseTime += workout.stats[i][j];
+                thisExerBreakTime += workout.stats[i][j];
             }
         }
         if (thisWorkoutTime < bestTimeWorkout)
@@ -540,9 +539,9 @@ function showWorkoutStats(index)
         {
             bestTimeBreakWorkout = thisBreakTime;
         }
-        if (thisStretchTime < bestTimeStretchWorkout)
+        if (thisExerBreakTime < bestTimeExerBreakWorkout)
         {
-            bestTimeStretchWorkout = thisStretchTime;
+            bestTimeExerBreakWorkout = thisExerBreakTime;
         }
     }
 
@@ -555,7 +554,7 @@ function showWorkoutStats(index)
 
     const averageTimeWorkout = totalTime / completions;
     const averageTimeBreakWorkout = breakTotalTimeWorkout / completions;
-    const averageTimeStretchWorkout = stretchTotalTimeWorkout / completions;
+    const averageTimeExerBreakWorkout = (breakTotalTimeWorkout + exerciseTotalTimeWorkout) / completions;
     const averageTimeExerciseWorkout = exerciseTotalTimeWorkout / completions;
 
     wholeWorkoutStats.innerHTML = `
@@ -567,11 +566,11 @@ function showWorkoutStats(index)
     <div><h3>Average time:</h3><h4>${secondsToHMS(averageTimeWorkout)}</h4></div>
     <div><h3>Average time exercising per workout:</h3><h4>${secondsToHMS(averageTimeExerciseWorkout)}</h4></div>
     <div><h3>Average time on breaks per workout:</h3><h4>${secondsToHMS(averageTimeBreakWorkout)}</h4></div>
-    <div><h3>Average time stretching per workout:</h3><h4>${secondsToHMS(averageTimeStretchWorkout)}</h4></div>
+    <div><h3>Average time stretching per workout:</h3><h4>${secondsToHMS(averageTimeExerBreakWorkout)}</h4></div>
     <div><h3>Best time:</h3><h4>${secondsToHMS(bestTimeWorkout)}</h4></div>
     <div><h3>Best time for exercises:</h3><h4>${secondsToHMS(bestTimeExerciseWorkout)}</h4></div>
     <div><h3>Best time for breaks:</h3><h4>${secondsToHMS(bestTimeBreakWorkout)}</h4></div>
-    <div><h3>Best time for stretching:</h3><h4>${secondsToHMS(bestTimeStretchWorkout)}</h4></div>
+    <div><h3>Best time for exercises + breaks:</h3><h4>${secondsToHMS(bestTimeExerBreakWorkout)}</h4></div>
     `;
 
     newInnerHTML = ``;
