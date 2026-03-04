@@ -817,7 +817,7 @@ backButton.addEventListener('click', handleBackButton);
 
 function handleHomeButton()
 {
-    if (document.querySelector(".active") === workoutScreen && currWorkout)
+    if ((document.querySelector(".active") === workoutScreen || document.querySelector(".active") === endWorkoutScreen) && currWorkout)
     {
         const confirmed = confirm("Are you sure? Leaving will lose workout progress!");
         if (!confirmed) return;
@@ -984,6 +984,15 @@ function handleViewStatsButton()
     updateUI();
 }
 viewStatsButton.addEventListener('click', handleViewStatsButton);
+
+window.addEventListener("beforeunload", function (event)
+{
+    if ((document.querySelector(".active") === workoutScreen || document.querySelector(".active") === endWorkoutScreen) && currWorkout)
+    {
+        event.preventDefault();
+        event.returnValue = "";
+    }
+});
 
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
