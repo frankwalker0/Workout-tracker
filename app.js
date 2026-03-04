@@ -285,6 +285,8 @@ function beginWorkout(index)
     mainTime.textContent = `00:00.000`;
     prevExerciseText.textContent = `None`;
     nextExerciseText.textContent = `${currWorkout.exercises[0].name}`;
+    
+    history.pushState({ workoutActive: true }, "");
 
     switchPage(workoutScreen);
 }
@@ -985,12 +987,31 @@ function handleViewStatsButton()
 }
 viewStatsButton.addEventListener('click', handleViewStatsButton);
 
+//All below is from ChatGPT
 window.addEventListener("beforeunload", function (event)
 {
     if ((document.querySelector(".active") === workoutScreen || document.querySelector(".active") === endWorkoutScreen) && currWorkout)
     {
         event.preventDefault();
         event.returnValue = "";
+    }
+});
+
+window.addEventListener("popstate", function (event) {
+
+    if ((document.querySelector(".active") === workoutScreen || document.querySelector(".active") === endWorkoutScreen) && currWorkout) {
+
+        const confirmLeave = confirm(
+            "Are you sure? Leaving will lose workout progress!"
+        );
+
+        if (confirmLeave) {
+            resetWorkout();
+            switchPage(titleScreen);
+        } else {
+            // Push state again so back button does nothing
+            history.pushState({ workoutActive: true }, "");
+        }
     }
 });
 
